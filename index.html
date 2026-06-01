@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>NordTek Dive Planner v1.0 Beta</title>
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.png">
+
+  <meta name="description"
+    content="Free scuba diving SAC calculator and gas planner. Calculate air consumption, gas requirements and dive supply with NordTek Dive Planner.">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #2e2e2e;
+      --red: #f52c2c;
+      --red2: #e03030;
+      --red-dim: rgba(224, 48, 48, .15);
+      --green: #14e6a4;
+      --green-dim: rgba(20, 230, 164, .1);
+      --orange: #f59e0b;
+      --text: #f4f4f4;
+      --muted: #8f98a3;
+      --unit: #7d8491;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  padding: 34px 16px 60px;
+}
+
+    .container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      text-align: center
+    }
+
+    .header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.45rem;
+      letter-spacing: 1.4px;
+      color: var(--red);
+      line-height: 1
+    }
+
+    .subtitle {
+      font-size: .78rem;
+      color: var(--muted);
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      margin-top: -4px
+    }
+
+    .unit-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+      width: 190px;
+      margin-top: 4px
+    }
+
+    .unit-toggle button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-weight: 700;
+      font-size: .75rem;
+      cursor: pointer
+    }
+
+    .unit-toggle button.active {
+      background: var(--red);
+      color: #fff
+    }
+
+    .tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+
+.tab {
+  padding: 12px 8px;
+  border: 0;
+  border-radius: 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+  background: transparent;
+  color: var(--muted);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tab.active {
+  background: var(--red);
+  color: #fff;
+}
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 22px
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -4px 0 18px
+    }
+
+    .preset-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      padding: 7px 11px;
+      font-size: .76rem;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .preset-btn:hover {
+      border-color: var(--red);
+      color: var(--text)
+    }
+
+    .field {
+      margin-bottom: 16px
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    .field-label svg {
+      width: 15px;
+      height: 15px;
+      color: var(--red);
+      flex-shrink: 0
+    }
+
+    .label-extra {
+      margin-left: auto;
+      color: var(--red);
+      font-size: .76rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      font-size: .65rem;
+      color: var(--muted);
+      cursor: help
+    }
+
+    .tip:hover:after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 22px;
+      width: 230px;
+      background: #0b0b0b;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      color: var(--text);
+      font-size: .75rem;
+      line-height: 1.4;
+      z-index: 10;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .35)
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center
+    }
+
+    .input-wrap input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 58px 13px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      transition: .2s;
+      -moz-appearance: textfield
+    }
+
+    .input-wrap input::-webkit-outer-spin-button,
+    .input-wrap input::-webkit-inner-spin-button {
+      -webkit-appearance: none
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--red)
+    }
+
+    .unit-badge {
+      position: absolute;
+      right: 14px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--unit);
+      letter-spacing: 1px;
+      pointer-events: none
+    }
+
+    .section {
+      display: none
+    }
+
+    .section.active {
+      display: block
+    }
+
+    .result-card {
+      background: linear-gradient(145deg, var(--surface), #181313);
+      border: 1px solid rgba(224, 48, 48, .28);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 24px;
+      display: none;
+      box-shadow: 0 0 45px rgba(224, 48, 48, .07)
+    }
+
+    .result-card.visible {
+      display: block
+    }
+
+    .result-card.ok {
+      border-color: rgba(20, 230, 164, .35)
+    }
+
+    .result-card.warn {
+      border-color: rgba(245, 158, 11, .45)
+    }
+
+    .result-card.bad {
+      border-color: rgba(245, 44, 44, .45)
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px
+    }
+
+    .result-header svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0
+    }
+
+    .ok .result-header svg {
+      color: var(--green)
+    }
+
+    .warn .result-header svg {
+      color: var(--orange)
+    }
+
+    .bad .result-header svg {
+      color: var(--red)
+    }
+
+    .result-title {
+      font-weight: 800;
+      font-size: 1rem
+    }
+
+    .ok .result-title {
+      color: var(--green)
+    }
+
+    .warn .result-title {
+      color: var(--orange)
+    }
+
+    .bad .result-title {
+      color: var(--red)
+    }
+
+    .result-sub {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: 1px
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px
+    }
+
+    .result-grid.full {
+      grid-template-columns: 1fr
+    }
+
+    .stat-box {
+      background: rgba(34, 34, 34, .78);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px
+    }
+
+    .stat-label {
+      font-size: .7rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: .5px
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.18rem;
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .stat-value .unit {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-left: 3px
+    }
+
+    .green {
+      color: var(--green) !important
+    }
+
+    .red {
+      color: var(--red) !important
+    }
+
+    .orange {
+      color: var(--orange) !important
+    }
+
+    .sac-result {
+      text-align: center;
+      padding: 8px 0 4px
+    }
+
+    .sac-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 10px
+    }
+
+    .sac-label svg {
+      width: 14px;
+      height: 14px;
+      color: var(--red)
+    }
+
+    .sac-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4.5rem;
+      line-height: 1;
+      letter-spacing: 2px
+    }
+
+    .sac-unit {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--muted);
+      margin-left: 6px
+    }
+
+    .sac-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, .1);
+      border: 1px solid rgba(245, 158, 11, .25);
+      color: var(--orange);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 12px 0 14px
+    }
+
+    .sac-badge.good,
+    .sac-badge.great {
+      background: rgba(20, 230, 164, .1);
+      border-color: rgba(20, 230, 164, .25);
+      color: var(--green)
+    }
+
+    .sac-badge.high {
+      background: rgba(245, 44, 44, .1);
+      border-color: rgba(245, 44, 44, .25);
+      color: var(--red)
+    }
+
+    .sac-desc {
+      font-size: .8rem;
+      color: var(--muted);
+      max-width: 290px;
+      margin: 0 auto;
+      line-height: 1.5
+    }
+
+    .scale {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 18px
+    }
+
+    .scale-item {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 4px;
+      text-align: center;
+      background: rgba(34, 34, 34, .58)
+    }
+
+    .scale-item strong {
+      display: block;
+      font-size: .66rem;
+      color: var(--text)
+    }
+
+    .scale-item span {
+      display: block;
+      font-size: .6rem;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .scale-item.active {
+      border-color: var(--red);
+      box-shadow: 0 0 0 1px rgba(245, 44, 44, .2)
+    }
+
+    .reset-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: none;
+      border: 0;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      cursor: pointer;
+      margin: 28px auto 0;
+      padding: 8px 16px;
+      border-radius: 8px
+    }
+
+    .reset-btn:hover {
+      color: var(--text)
+    }
+
+    .reset-btn svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .formula {
+      text-align: center;
+      font-size: .72rem;
+      color: #4d4d4d;
+      margin-top: 28px;
+      letter-spacing: .5px
+    }
+.sac-help {
+  margin-top: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.sac-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--red);
+  outline: none;
+}
+
+.sac-help-content {
+  margin-top: 10px;
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.sac-help-content ol,
+.sac-help-content ul {
+  margin-top: 8px;
+  padding-left: 20px;
+}
+
+.sac-help-content p {
+  margin-top: 10px;
+}
+    .safety-note {
+      font-size: .7rem;
+      color: #666;
+      line-height: 1.45;
+      margin-top: 14px;
+      text-align: center
+    }
+.coming-soon {
+  margin-top: 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+}
+
+.coming-soon-title {
+  color: var(--red);
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: .8rem;
+}
+
+.coming-soon ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.coming-soon li {
+  color: var(--muted);
+  padding: 5px 0;
+  font-size: .85rem;
+}
+    .footer {
+  width: 100%;
+  max-width: 480px;
+  margin: 50px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: #666;
+  font-size: .75rem;
+  line-height: 1.8;
+}
+
+    .footer-title {
+  color: #e03030;
+  font-weight: 700;
+}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>NordTek Dive Planner</h1>
+      <div class="subtitle" id="unit-subtitle">SAC • Gas Planning</div>
+      <div class="unit-toggle"><button id="metric-btn" class="active"
+          onclick="setUnits('metric')">Metric</button><button id="imperial-btn"
+          onclick="setUnits('imperial')">Imperial</button></div>
+    </div>
+    <div class="tabs"><button class="tab active" onclick="switchTab('sac')">SAC Calculator</button>
+<button class="tab" onclick="switchTab('gas')">Gas Planner</button></div>
+
+    <div class="section active" id="sac-section">
+      <div class="preset-row"><button class="preset-btn" onclick="presetSAC(11.1,207)">AL80</button><button
+          class="preset-btn" onclick="presetSAC(10,232)">10L</button><button class="preset-btn"
+          onclick="presetSAC(12,232)">12L</button><button class="preset-btn"
+          onclick="presetSAC(15,232)">15L</button></div>
+      <div class="field">
+        <div class="field-label">Starting Pressure</div>
+        <div class="input-wrap"><input type="number" id="sac-start" value="0" min="0" oninput="calcSAC()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Ending Pressure</div>
+        <div class="input-wrap"><input type="number" id="sac-end" value="0" min="0" oninput="calcSAC()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Tank Size</div>
+        <div class="input-wrap"><input type="number" id="sac-tank" value="0" min="1" oninput="calcSAC()"><span
+            class="unit-badge tank-unit">L</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Dive Time</div>
+        <div class="input-wrap"><input type="number" id="sac-time" value="0" min="1" oninput="calcSAC()"><span
+            class="unit-badge">MIN</span></div>
+      </div>
+      <div class="field">
+      <div class="field-label">Average Depth <span class="tip"
+            data-tip="Use your average depth, not only the maximum depth. SAC is normalized to surface pressure.">?</span>
+        </div>
+        <div class="input-wrap"><input type="number" id="sac-depth" value="0" min="0" oninput="calcSAC()"><span
+            class="unit-badge depth-unit">M</span></div>
+      </div>
+
+```
+  <details class="sac-help">
+    <summary>Don't know your average depth?</summary>
+
+    <div class="sac-help-content">
+      <strong>Use a SAC Test Dive</strong>
+
+      <p><strong>Recommended test depth:</strong> 10–15m</p>
+
+      <ol>
+        <li>Descend to a constant depth.</li>
+        <li>Swim normally for 10–15 minutes.</li>
+        <li>Record:
+          <ul>
+            <li>Start Pressure</li>
+            <li>End Pressure</li>
+            <li>Time</li>
+            <li>Depth</li>
+          </ul>
+        </li>
+        <li>Enter that depth as your Average Depth.</li>
+      </ol>
+
+      <p>
+        Because the depth remains constant, your test depth equals your average depth,
+        producing a much more accurate SAC rate.
+      </p>
+    </div>
+  </details>
+
+  <div class="result-card" id="sac-result">
+    <div class="sac-result">
+      <div class="sac-label">⌁ Your SAC Rate</div>
+      <div><span class="sac-value" id="sac-display">—</span><span class="sac-unit"
+          id="sac-unit-display">L/min</span></div>
+      <div><span class="sac-badge" id="sac-badge">—</span></div>
+      <div class="sac-desc">Surface Air Consumption — the amount of gas you'd use per minute at the surface.</div>
+      <div class="scale" id="sac-scale"></div>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetSAC()">↻ Reset</button>
+  <div class="formula">SAC = (ΔPressure × Tank Vol) ÷ Time ÷ Depth Factor</div>
+```
+
+</div>
+
+    <div class="section" id="gas-section">
+      <div class="info-box">Plan your recreational dive gas needs. Enter your cylinder setup and dive profile — NordTek
+        calculates gas required, end pressure, reserve and safety margin.</div>
+      <div class="preset-row"><button class="preset-btn" onclick="presetGas(11.1,207,1)">AL80</button><button
+          class="preset-btn" onclick="presetGas(10,232,1)">10L</button><button class="preset-btn"
+          onclick="presetGas(12,232,1)">12L</button><button class="preset-btn"
+          onclick="presetGas(15,232,1)">15L</button></div>
+      <div class="field">
+        <div class="field-label">Cylinder Volume</div>
+        <div class="input-wrap"><input type="number" id="gas-vol" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge tank-unit">L</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Cylinder Fill Pressure</div>
+        <div class="input-wrap"><input type="number" id="gas-fill" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Number of Cylinders</div>
+        <div class="input-wrap"><input type="number" id="gas-cylinders" value="0" min="1" max="4" oninput="calcGas()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Target Depth</div>
+        <div class="input-wrap"><input type="number" id="gas-depth" value="0" min="0" oninput="calcGas()"><span
+            class="unit-badge depth-unit">M</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Planned Dive Time</div>
+        <div class="input-wrap"><input type="number" id="gas-time" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge">MIN</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Minimum Reserve Pressure</div>
+        <div class="input-wrap"><input type="number" id="gas-reserve" value="0" min="0" oninput="calcGas()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Your SAC Rate <span class="tip"
+            data-tip="If you do not know your SAC yet, use 20 L/min as a conservative recreational estimate until you have real dive data.">?</span><span
+            class="label-extra" onclick="switchTab('sac')">Calculate yours ›</span></div>
+        <div class="input-wrap"><input type="number" id="gas-sac" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge sac-rate-unit">L/MIN</span></div>
+      </div>
+      <div class="result-card" id="gas-result">
+        <div class="result-header"><svg id="gas-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <div>
+            <div class="result-title" id="gas-title">—</div>
+            <div class="result-sub" id="gas-sub">—</div>
+          </div>
+        </div>
+        <div class="result-grid">
+          <div class="stat-box">
+            <div class="stat-label">Gas Required</div>
+            <div class="stat-value" id="gas-req-val">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Usable Gas</div>
+            <div class="stat-value green" id="gas-avail-val">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">End Pressure</div>
+            <div class="stat-value" id="gas-end-pressure">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Safety Margin</div>
+            <div class="stat-value" id="gas-margin">—</div>
+          </div>
+        </div>
+        <div class="result-grid full">
+          <div class="stat-box">
+            <div class="stat-label">Reserve Remaining</div>
+            <div class="stat-value green" id="gas-reserve-val">—</div>
+          </div>
+        </div>
+      </div>
+      <button class="reset-btn" onclick="resetGas()">↻ Reset</button>
+<div class="formula">Gas Required = SAC × Depth Factor × Time</div>
+</div>
+
+<div class="coming-soon">
+  <div class="coming-soon-title">Coming Soon</div>
+  <ul>
+    <li>Tec Mode</li>
+    <li>Multi-Gas Switching</li>
+    <li>MOD Calculator</li>
+    <li>Advanced Dive Planning</li>
+  </ul>
+</div>
+  <script>
+    let units = 'metric';
+    const $ = id => document.getElementById(id);
+    function switchTab(tab) { document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'sac') || (i === 1 && tab === 'gas'))); $('sac-section').classList.toggle('active', tab === 'sac'); $('gas-section').classList.toggle('active', tab === 'gas'); calcAll(); }
+    function setUnits(u) { if (units === u) return; units = u; $('metric-btn').classList.toggle('active', u === 'metric'); $('imperial-btn').classList.toggle('active', u === 'imperial'); document.querySelectorAll('.pressure-unit').forEach(e => e.textContent = u === 'metric' ? 'BAR' : 'PSI'); document.querySelectorAll('.depth-unit').forEach(e => e.textContent = u === 'metric' ? 'M' : 'FT'); document.querySelectorAll('.tank-unit').forEach(e => e.textContent = u === 'metric' ? 'L' : 'CU FT'); document.querySelectorAll('.sac-rate-unit').forEach(e => e.textContent = u === 'metric' ? 'L/MIN' : 'CUFT/MIN'); document.querySelectorAll('.speed-unit').forEach(e => e.textContent = u === 'metric' ? 'M/MIN' : 'FT/MIN'); $('sac-unit-display').textContent = u === 'metric' ? 'L/min' : 'cu ft/min'; calcAll(); }
+    function ata(depth) { return units === 'metric' ? depth / 10 + 1 : depth / 33 + 1 }
+    function gasFromPressure(vol, pressure, cyls = 1) { return vol * pressure * cyls }
+    function pressureFromGas(gas, vol, cyls = 1) { return gas / (vol * cyls) }
+    function volumeUnit() { return units === 'metric' ? 'L' : 'cu ft' } function pressureUnit() { return units === 'metric' ? 'bar' : 'psi' }
+    function calcSAC() { const start = +$('sac-start').value || 0, end = +$('sac-end').value || 0, tank = +$('sac-tank').value || 0, time = +$('sac-time').value || 0, depth = +$('sac-depth').value || 0, card = $('sac-result'); if (!start || !tank || !time || !depth || start <= end) { card.classList.remove('visible'); return } const sac = gasFromPressure(tank, start - end) / time / ata(depth); $('sac-display').textContent = sac.toFixed(2); let label = 'High', cls = 'high', icon = '↑'; const limits = units === 'metric' ? [10, 15, 20, 25] : [.35, .53, .71, .88]; if (sac < limits[0]) { label = 'Excellent'; cls = 'great'; icon = '↓' } else if (sac < limits[1]) { label = 'Very Good'; cls = 'good'; icon = '✓' } else if (sac < limits[2]) { label = 'Good'; cls = 'good'; icon = '⌁' } else if (sac < limits[3]) { label = 'Average'; cls = ''; icon = '~' } $('sac-badge').className = 'sac-badge ' + cls; $('sac-badge').textContent = icon + ' ' + label; renderScale(sac, limits); card.classList.add('visible') }
+    function renderScale(sac, limits) { const labels = ['Excellent', 'Very Good', 'Good', 'Average', 'High']; const ranges = units === 'metric' ? ['<10', '10-15', '15-20', '20-25', '25+'] : ['<.35', '.35-.53', '.53-.71', '.71-.88', '.88+']; let idx = sac < limits[0] ? 0 : sac < limits[1] ? 1 : sac < limits[2] ? 2 : sac < limits[3] ? 3 : 4; $('sac-scale').innerHTML = labels.map((l, i) => `<div class="scale-item ${i === idx ? 'active' : ''}"><strong>${l}</strong><span>${ranges[i]}</span></div>`).join('') }
+    function calcGas() { const vol = +$('gas-vol').value || 0, fill = +$('gas-fill').value || 0, cyls = +$('gas-cylinders').value || 1, depth = +$('gas-depth').value || 0, time = +$('gas-time').value || 0, reserve = +$('gas-reserve').value || 0, sac = +$('gas-sac').value || 0, card = $('gas-result'); if (!vol || !fill || !depth || !time || !sac) { card.classList.remove('visible'); return } const req = sac * ata(depth) * time, total = gasFromPressure(vol, fill, cyls), reserveGas = gasFromPressure(vol, reserve, cyls), usable = total - reserveGas, remain = usable - req, endPressure = fill - pressureFromGas(req, vol, cyls), margin = usable > 0 ? (remain / usable) * 100 : 0, sufficient = req <= usable, tight = margin >= 0 && margin < 20; const vu = volumeUnit(), pu = pressureUnit(); $('gas-req-val').innerHTML = Math.round(req) + ` <span class="unit">${vu}</span>`; $('gas-avail-val').innerHTML = Math.round(usable) + ` <span class="unit">${vu}</span>`; $('gas-end-pressure').innerHTML = Math.round(endPressure) + ` <span class="unit">${pu}</span>`; $('gas-margin').innerHTML = (margin >= 0 ? '+' : '') + Math.round(margin) + '%'; $('gas-reserve-val').innerHTML = Math.round(remain) + ` <span class="unit">${vu}</span>`; $('gas-reserve-val').className = 'stat-value ' + (remain >= 0 ? 'green' : 'red'); $('gas-margin').className = 'stat-value ' + (sufficient ? (tight ? 'orange' : 'green') : 'red'); card.className = 'result-card visible ' + (sufficient ? (tight ? 'warn' : 'ok') : 'bad'); $('gas-title').textContent = sufficient ? (tight ? 'Gas Supply Tight' : 'Planned Gas Supply Sufficient') : 'Insufficient Gas'; $('gas-sub').textContent = sufficient ? (tight ? 'Enough gas, but the safety margin is narrow.' : 'You have enough gas to complete this dive.') : 'You do not have enough gas for this dive profile.' }
+    function presetSAC(tank, fill) { $('sac-tank').value = tank; $('sac-start').value = fill; calcSAC() } function presetGas(vol, fill, cyls) { $('gas-vol').value = vol; $('gas-fill').value = fill; $('gas-cylinders').value = cyls; calcGas() }
+    function resetSAC() { $('sac-start').value = 0; $('sac-end').value = 0; $('sac-tank').value = 0; $('sac-time').value = 0; $('sac-depth').value = 0; calcSAC() } function resetGas() { $('gas-vol').value = 0; $('gas-fill').value = 0; $('gas-cylinders').value = 0; $('gas-depth').value = 0; $('gas-time').value = 0; $('gas-reserve').value = 0; $('gas-sac').value = 0; calcGas() } function calcAll() { calcSAC(); calcGas() } calcAll();
+  </script>
+</div>
+</div>
+  <footer class="footer">
+    <div class="footer-title">NordTek Dive Planner</div>
+    <div>Version 1.0 Beta, by Dawood</div>
+  </footer>
+</body>
+
+</html>
