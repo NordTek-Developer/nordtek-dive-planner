@@ -1,0 +1,16 @@
+{
+  "name": "NordTek Dive Planner",
+  "short_name": "NordTek",
+  "description": "Scuba diving SAC calculator and gas planner.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
