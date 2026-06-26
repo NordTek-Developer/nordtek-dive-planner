@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NordTek Dive Planner v1.5 beta | Free Scuba Dive Planning Tool</title>
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="theme-color" content="#0f0f0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NordTek Dive Planner">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="description" content="Free recreational scuba dive planner with no-decompression limit checks, SAC calculator, gas planner and MOD calculator. Estimate dive limits, air consumption and gas requirements with NordTek Dive Planner.">
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --bg2: #141414;
+      --surface: rgba(26, 26, 26, .94);
+      --surface2: rgba(34, 34, 34, .94);
+      --surface3: #262626;
+      --border: rgba(255, 255, 255, .10);
+      --border-strong: rgba(245, 44, 44, .38);
+      --red: #ff3b35;
+      --red2: #e03030;
+      --red-dim: rgba(255, 59, 53, .14);
+      --cyan: #f52c2c;
+      --cyan2: #f4f4f4;
+      --cyan-dim: rgba(245, 44, 44, .10);
+      --green: #14e6a4;
+      --green-dim: rgba(20, 230, 164, .1);
+      --orange: #f59e0b;
+      --text: #f4f4f4;
+      --muted: #8f98a3;
+      --muted2: #707780;
+      --unit: #7d8491;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-y: scroll; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(245, 44, 44, .11), transparent 34rem),
+        radial-gradient(circle at top right, rgba(255, 255, 255, .045), transparent 30rem),
+        linear-gradient(180deg, #141414 0%, #0f0f0f 46%, #080808 100%);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      padding: 0 18px 42px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .28;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, black, transparent 80%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .site-shell { width: 100%; max-width: 1180px; margin: 0 auto; }
+
+    .topbar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 0 14px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; min-width: max-content; }
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      display: block;
+      object-fit: contain;
+      border-radius: 12px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      flex: 0 0 auto;
+    }
+    .brand-name { color: var(--red); font-size: 1.35rem; font-weight: 800; letter-spacing: -.03em; }
+    .brand-sub { color: var(--muted2); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; margin-top: -2px; }
+
+    .nav-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .nav-actions button {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: .88rem;
+      transition: .2s;
+    }
+    .nav-actions button:hover { color: var(--text); border-color: var(--border); }
+    .nav-actions button.active-page { color: var(--text); background: rgba(255,255,255,.05); border-color: var(--border); }
+    .nav-actions { position: relative; }
+    .nav-actions .open-planner { background: var(--red); border-color: var(--red); color: white; box-shadow: 0 12px 30px rgba(255,59,53,.22); }
+    .nav-actions .open-planner:hover { background: var(--red2); color: white; }
+    .nav-actions .more-btn { border-color: var(--border); color: var(--text); background: rgba(255,255,255,.04); }
+    .more-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 10px);
+      width: 230px;
+      display: none;
+      background: rgba(18,18,18,.98);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 8px;
+      box-shadow: var(--shadow);
+      z-index: 20;
+    }
+    .more-menu.visible { display: block; }
+    .more-menu button {
+      width: 100%;
+      border-radius: 10px;
+      padding: 10px 11px;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      border-color: transparent;
+    }
+    .more-menu button:hover { background: rgba(255,255,255,.05); border-color: transparent; }
+    .more-menu .soon { color: var(--muted2); font-size: .72rem; }
+
+    .page { display: none; }
+    .page.active-page-view { display: block; }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(390px, .95fr);
+      gap: 30px;
+      align-items: center;
+      min-height: 620px;
+      padding: 54px 0 36px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 22px -18px auto;
+      height: 430px;
+      border-radius: 34px;
+      background:
+        linear-gradient(90deg, rgba(15,15,15,.30), rgba(15,15,15,.92)),
+        radial-gradient(circle at 20% 0%, rgba(245,44,44,.16), transparent 28rem),
+        linear-gradient(135deg, rgba(255,255,255,.045), transparent 38%);
+      border: 1px solid rgba(255,255,255,.05);
+      box-shadow: var(--shadow);
+      z-index: -1;
+    }
+
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--cyan);
+      background: rgba(245, 44, 44, .09);
+      border: 1px solid rgba(245, 44, 44, .22);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: .78rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 7vw, 5.65rem);
+      line-height: .94;
+      letter-spacing: -.07em;
+      max-width: 660px;
+      margin-bottom: 22px;
+    }
+    .red-dot { color: var(--red); }
+    .hero-copy { color: #d8d8d8; font-size: 1.12rem; line-height: 1.65; max-width: 540px; margin-bottom: 28px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 13px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .btn-primary { background: linear-gradient(180deg, #ff4b45, #e02e2e); border-color: rgba(255,255,255,.1); box-shadow: 0 16px 34px rgba(255,59,53,.22); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-secondary { background: rgba(255,255,255,.04); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--cyan); }
+    .trust-line { color: var(--cyan2); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .hero-secondary-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+    .feature-jump {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 800;
+      padding: 6px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .feature-jump:hover { color: var(--text); }
+    .feature-arrow { color: var(--red); font-size: 1rem; line-height: 1; }
+
+    .preview-card {
+      background: rgba(18, 18, 18, .92);
+      border: 1px solid rgba(255, 255, 255, .11);
+      border-radius: 22px;
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.03);
+      padding: 18px;
+      overflow: hidden;
+    }
+    .preview-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .preview-title { font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .metric-pill { color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-size: .78rem; }
+    .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+    .preview-tile, .preview-box {
+      background: linear-gradient(180deg, rgba(34,34,34,.9), rgba(20,20,20,.92));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .preview-tile span, .preview-row span { display: block; color: var(--muted); font-size: .67rem; margin-bottom: 6px; }
+    .preview-tile strong { font-family: 'JetBrains Mono', monospace; font-size: 1.08rem; }
+    .preview-main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .preview-box h4 { font-size: .78rem; margin-bottom: 10px; }
+    .preview-row { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(255,255,255,.07); padding: 7px 0; font-size: .75rem; }
+    .preview-row:last-child { border-bottom: 0; }
+    .ring {
+      width: 118px; height: 118px; border-radius: 50%; margin: 8px auto 4px;
+      display: grid; place-items: center;
+      background: conic-gradient(var(--green) 0 54%, #2a2a2a 54% 100%);
+      position: relative;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+    .ring::before { content: ""; position: absolute; inset: 13px; background: #111; border-radius: 50%; }
+    .ring span { position: relative; z-index: 1; }
+    .remaining { text-align: center; color: var(--cyan); font-size: .76rem; margin-top: 7px; }
+    .preview-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .72rem;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .section-heading { text-align: center; margin: 44px auto 24px; max-width: 700px; }
+    .section-heading h2 { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.05em; }
+    .section-heading p { color: var(--muted); line-height: 1.6; margin-top: 8px; }
+
+    .tool-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .home-card, .mini-card, .soon-card, .why-card {
+      background: rgba(26,26,26,.90);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    .home-card-head { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+    .icon-bubble { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--cyan); background: var(--cyan-dim); border: 1px solid rgba(245,44,44,.24); font-size: 1.55rem; }
+    .home-card h3, .why-card h3, .mini-card h3, .soon-card h3 { font-size: 1.15rem; margin-bottom: 5px; }
+    .home-card p, .why-card p, .mini-card p, .soon-card p { color: var(--muted); line-height: 1.55; }
+    .check-list { list-style: none; margin-top: 14px; }
+    .check-list li { color: #d8d8d8; margin: 9px 0; padding-left: 24px; position: relative; }
+    .check-list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--cyan); font-weight: 800; }
+
+    .mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+    .mini-card { padding: 18px; min-height: 145px; }
+    .mini-card .icon-bubble { width: 42px; height: 42px; border-radius: 13px; font-size: 1.25rem; margin-bottom: 12px; }
+
+    .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .why-card { display: flex; gap: 15px; align-items: flex-start; }
+    .why-card .icon-bubble { flex: 0 0 auto; }
+
+    .soon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .soon-card .icon-bubble { color: var(--red); background: var(--red-dim); border-color: rgba(255,59,53,.28); margin-bottom: 13px; }
+
+    .landing-disclaimer {
+      margin: 34px 0 42px;
+      background: linear-gradient(90deg, rgba(26,26,26,.96), rgba(26,26,26,.70));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .landing-disclaimer strong { color: var(--text); }
+
+    .about-page-wrap { max-width: 900px; margin: 0 auto; padding: 34px 0 12px; }
+    .about-hero {
+      background: linear-gradient(145deg, rgba(26,26,26,.96), rgba(12,12,12,.96));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .about-hero h1 { font-size: clamp(2.3rem, 5vw, 4rem); letter-spacing: -.06em; line-height: 1; margin-bottom: 12px; }
+    .about-hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
+    .about-primary-card {
+      background: rgba(26,26,26,.90);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 14px;
+      line-height: 1.65;
+    }
+    .about-primary-card h2 { color: var(--red); margin-bottom: 10px; font-size: 1.25rem; }
+    .about-primary-card p { color: var(--muted); margin-top: 12px; }
+    .about-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+    .about-card { background: rgba(26,26,26,.90); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .about-card h2 { color: var(--red); font-size: 1.05rem; margin-bottom: 8px; }
+    .about-card p, .about-card li { color: var(--muted); line-height: 1.6; }
+    .about-card ul { list-style: none; margin-top: 8px; }
+    .about-card li { margin: 7px 0; padding-left: 20px; position: relative; }
+    .about-card li::before { content: "•"; position: absolute; left: 0; color: var(--red); }
+
+    #tools-page { padding: 26px 0 10px; }
+    .tools-shell { max-width: 520px; margin: 0 auto; }
+    .tools-intro { text-align: center; margin: 20px auto 24px; max-width: 680px; }
+    .tools-intro h2 { font-size: clamp(2.1rem, 5vw, 3.2rem); letter-spacing: -.06em; }
+    .tools-intro p { color: var(--muted); line-height: 1.65; margin-top: 8px; }
+
+    .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; background: rgba(26,26,26,.92); border-radius: 14px; padding: 5px; margin-bottom: 24px; border: 1px solid var(--border); gap: 5px; }
+    .tab { padding: 12px 8px; border: 0; border-radius: 10px; font-size: .82rem; font-weight: 800; cursor: pointer; transition: .2s; background: transparent; color: var(--muted); min-width: 0; white-space: nowrap; }
+    .tab.active { background: var(--red); color: #fff; }
+
+    .section, .info-box, .result-card, .sac-help, .input-wrap, .tabs { width: 100%; max-width: 100%; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .info-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 18px; }
+    .preset-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; color: var(--muted); padding: 7px 11px; font-size: .76rem; font-weight: 800; cursor: pointer; }
+    .preset-btn:hover { border-color: var(--red); color: var(--text); }
+    .field { margin-bottom: 16px; }
+    .field-label { display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+    .label-extra { margin-left: auto; color: var(--red); font-size: .76rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .tip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 50%; font-size: .65rem; color: var(--muted); cursor: help; }
+    .tip:hover:after { content: attr(data-tip); position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; width: 230px; background: #111; border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text); font-size: .75rem; line-height: 1.4; z-index: 10; box-shadow: var(--shadow); }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap input, .input-wrap select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 58px 13px 16px; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text); outline: none; transition: .2s; -moz-appearance: textfield; }
+    .input-wrap select { padding-right: 16px; font-family: 'DM Sans', sans-serif; }
+    .input-wrap input::-webkit-outer-spin-button, .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .input-wrap input:focus, .input-wrap select:focus { border-color: var(--red); }
+    .unit-badge { position: absolute; right: 14px; font-size: .72rem; font-weight: 800; color: var(--unit); letter-spacing: 1px; pointer-events: none; }
+
+    .result-card { background: linear-gradient(145deg, var(--surface), rgba(22, 22, 22, .94)); border: 1px solid rgba(255, 59, 53, .28); border-radius: 16px; padding: 20px; margin-top: 24px; display: none; box-shadow: 0 0 45px rgba(255, 59, 53, .07); }
+    .result-card.visible { display: block; }
+    .result-card.ok { border-color: rgba(20, 230, 164, .35); }
+    .result-card.warn { border-color: rgba(245, 158, 11, .45); }
+    .result-card.bad { border-color: rgba(255, 59, 53, .45); }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .result-header svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .ok .result-header svg { color: var(--green); }
+    .warn .result-header svg { color: var(--orange); }
+    .bad .result-header svg { color: var(--red); }
+    .result-title { font-weight: 800; font-size: 1rem; }
+    .ok .result-title { color: var(--green); }
+    .warn .result-title { color: var(--orange); }
+    .bad .result-title { color: var(--red); }
+    .result-sub { font-size: .8rem; color: var(--muted); margin-top: 1px; }
+    .result-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }
+    .result-grid.full { grid-template-columns: 1fr; }
+    .stat-box { min-width: 0; background: rgba(34, 34, 34, .78); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .stat-label { font-size: .7rem; color: var(--muted); margin-bottom: 4px; letter-spacing: .5px; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.18rem; font-weight: 600; color: var(--text); }
+    .stat-value .unit { font-size: .75rem; color: var(--muted); margin-left: 3px; }
+    .green { color: var(--green) !important; }
+    .red { color: var(--red) !important; }
+    .orange { color: var(--orange) !important; }
+    .sac-result { text-align: center; padding: 8px 0 4px; }
+    .sac-label { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+    .sac-value { font-family: 'DM Sans', sans-serif; font-size: 4rem; font-weight: 800; line-height: 1; }
+    .sac-unit { font-family: 'DM Sans', sans-serif; font-size: 1rem; color: var(--muted); margin-left: 6px; }
+    .sac-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, .1); border: 1px solid rgba(245, 158, 11, .25); color: var(--orange); border-radius: 20px; padding: 5px 14px; font-size: .8rem; font-weight: 800; margin: 12px 0 14px; }
+    .sac-badge.good, .sac-badge.great { background: rgba(20, 230, 164, .1); border-color: rgba(20, 230, 164, .25); color: var(--green); }
+    .sac-badge.high { background: rgba(255, 59, 53, .1); border-color: rgba(255, 59, 53, .25); color: var(--red); }
+    .sac-desc { font-size: .8rem; color: var(--muted); max-width: 315px; margin: 0 auto; line-height: 1.5; }
+    .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 18px; }
+    .scale-item { border: 1px solid var(--border); border-radius: 9px; padding: 8px 4px; text-align: center; background: rgba(34, 34, 34, .58); }
+    .scale-item strong { display: block; font-size: .66rem; color: var(--text); }
+    .scale-item span { display: block; font-size: .6rem; color: var(--muted); margin-top: 2px; }
+    .scale-item.active { border-color: var(--red); box-shadow: 0 0 0 1px rgba(255, 59, 53, .2); }
+    .reset-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: none; border: 0; color: var(--muted); font-size: .85rem; cursor: pointer; margin: 28px auto 0; padding: 8px 16px; border-radius: 8px; }
+    .reset-btn:hover { color: var(--text); }
+    .sac-help { margin-top: 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 8px 10px; overflow: hidden; }
+    .sac-help summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: .75rem; }
+    .sac-help-content { margin-top: 8px; font-size: .74rem; color: var(--muted); line-height: 1.45; text-align: left; }
+    .sac-help-content p { margin-top: 8px; }
+    .sac-help-content ol { padding-left: 18px; margin-top: 8px; }
+    .sac-help-content li { margin-bottom: 4px; }
+    .safety-note { font-size: .7rem; color: var(--muted2); line-height: 1.45; margin-top: 14px; text-align: center; }
+    .warning-box { margin-top: 8px; padding: 10px; border-radius: 8px; background: rgba(255,59,53,.1); border: 1px solid rgba(255,59,53,.3); color: var(--red); font-size: .8rem; line-height: 1.4; }
+    .action-btn { display: block; width: 100%; margin-top: 18px; padding: 12px 16px; background: var(--red); border: 1px solid var(--red); border-radius: 10px; color: #fff; font-size: .9rem; font-weight: 800; cursor: pointer; transition: .2s; }
+    .action-btn:hover { background: var(--red2); }
+    .card-action {
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px 14px;
+      border-radius: 11px;
+      border: 1px solid var(--red);
+      background: rgba(255, 59, 53, .13);
+      color: var(--text);
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .card-action:hover { background: var(--red); color: #fff; }
+    .secondary-card-action { border-color: var(--border); background: rgba(255,255,255,.04); }
+    .secondary-card-action:hover { border-color: var(--red); background: rgba(255, 59, 53, .13); }
+
+    .planner-mode {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 18px;
+    }
+    .mode-btn {
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      padding: 11px 9px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: .8rem;
+      transition: .2s;
+    }
+    .mode-btn.active { background: var(--red); color: #fff; }
+    .planner-source {
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: .72rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .gas-options {
+      display: none;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 4px 0 18px;
+      background: rgba(255,255,255,.025);
+    }
+    .gas-options.visible { display: block; }
+    .planner-summary {
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.55;
+      margin-top: 12px;
+    }
+
+
+    .footer { width: 100%; max-width: 1180px; margin: 50px auto 0; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 18px; color: var(--muted2); font-size: .82rem; line-height: 1.8; flex-wrap: wrap; }
+    .footer-title { color: var(--red); font-weight: 800; }
+    .disclaimer { max-width: 1180px; margin: 18px auto 0; padding: 12px 0; font-size: .72rem; line-height: 1.5; color: var(--muted2); text-align: center; }
+
+    @media (max-width: 980px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .nav-actions { justify-content: flex-start; }
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .preview-card { max-width: 680px; }
+      .mini-grid, .soon-grid { grid-template-columns: repeat(2, 1fr); }
+      .why-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding-inline: 14px; }
+      .topbar { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; }
+      .brand { gap: 9px; min-width: 0; }
+      .brand-mark { width: 38px; height: 38px; border-radius: 9px; flex: 0 0 auto; }
+      .brand-name { font-size: .94rem; line-height: 1.05; }
+      .brand-sub { display: none; }
+      .nav-actions { width: auto; display: flex; gap: 6px; flex: 0 0 auto; }
+      .nav-actions button { display: none; }
+      .nav-actions .more-btn,
+      .nav-actions .open-planner { display: inline-flex; width: auto; padding: 9px 11px; font-size: .76rem; box-shadow: none; }
+      .more-menu { right: 0; width: min(230px, calc(100vw - 28px)); }
+      .hero { padding-top: 24px; }
+      .hero-actions { flex-direction: column; }
+      .btn { width: 100%; }
+      .preview-grid, .preview-main { grid-template-columns: 1fr 1fr; }
+      .preview-main .preview-box:last-child { grid-column: 1 / -1; }
+      .tool-card-grid, .mini-grid, .soon-grid, .about-card-grid { grid-template-columns: 1fr; }
+      .about-hero { padding: 22px; }
+      .why-card { flex-direction: column; }
+      .tools-shell { max-width: 100%; }
+      .tabs { grid-template-columns: repeat(4, 1fr); }
+      .tab { font-size: .64rem; padding: 10px 3px; white-space: normal; line-height: 1.1; }
+      .planner-mode { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: 1fr; }
+      .scale { grid-template-columns: 1fr; }
+      .sac-value { font-size: 3.2rem; }
+      .footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#" onclick="goHome(); return false;" aria-label="NordTek Dive Planner Home">
+        <img class="brand-mark" src="favicon.png" alt="NordTek logo">
+        <div>
+          <div class="brand-name">NordTek Dive Planner</div>
+          <div class="brand-sub">Beta | v1.5</div>
+        </div>
+      </a>
+
+      <nav class="nav-actions" aria-label="Main navigation">
+        <button onclick="goHome()">Home</button>
+        <button onclick="showPage('about')">About</button>
+        <button class="more-btn" onclick="toggleMoreMenu(event)" aria-expanded="false" aria-controls="more-menu">More ⋯</button>
+        <button class="open-planner" onclick="openTool('dive')">Planner</button>
+        <div class="more-menu" id="more-menu" aria-label="More options">
+          <button onclick="goHomeSection('features'); closeMoreMenu();">Features <span>↓</span></button>
+          <button onclick="openTool('mod'); closeMoreMenu();">MOD Calculator <span>›</span></button>
+          <button type="button">Settings <span class="soon">soon</span></button>
+          <button type="button">Account <span class="soon">soon</span></button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section id="home-page" class="page">
+        <section class="hero">
+          <div class="hero-content">
+            <div class="eyebrow">Recreational dive planning toolkit</div>
+            <h1>Plan Smarter.<br>Dive Safer<span class="red-dot">.</span></h1>
+            <p class="hero-copy">
+              NordTek Dive Planner helps you check no-decompression limits, estimate gas needs, calculate SAC/RMV, and prepare recreational dives with confidence.
+            </p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" onclick="openTool('dive')">▣ Open Planner</button>
+              <button class="btn btn-secondary" onclick="openTool('sac')">▦ Calculate SAC</button>
+            </div>
+            <div class="trust-line">◇ Practical. Simple. Reliable.</div>
+            <div class="hero-secondary-row">
+              <button class="feature-jump" onclick="goHomeSection('features')">Explore features <span class="feature-arrow">↓</span></button>
+            </div>
+          </div>
+
+          <aside class="preview-card" aria-label="Dive overview preview">
+            <div class="preview-top">
+              <div class="preview-title">⌁ Dive Plan Overview</div>
+              <div class="metric-pill">Metric ▾</div>
+            </div>
+
+            <div class="preview-grid">
+              <div class="preview-tile"><span>Maximum Depth</span><strong>30.0 m</strong></div>
+              <div class="preview-tile"><span>Dive Time</span><strong>45 min</strong></div>
+              <div class="preview-tile"><span>NDL Remaining</span><strong>15 min</strong></div>
+              <div class="preview-tile"><span>Water Temp.</span><strong>18°C</strong></div>
+            </div>
+
+            <div class="preview-main">
+              <div class="preview-box">
+                <h4>Cylinder & Gas</h4>
+                <div class="preview-row"><span>Cylinder</span><b>12 L</b></div>
+                <div class="preview-row"><span>Start</span><b>200 bar</b></div>
+                <div class="preview-row"><span>Reserve</span><b>50 bar</b></div>
+                <div class="preview-row"><span>Mix</span><b>Air 21%</b></div>
+              </div>
+              <div class="preview-box">
+                <h4>Planning Status</h4>
+                <div class="ring"><span>Within limits</span></div>
+                <div class="remaining">NDL: 60 min</div>
+              </div>
+              <div class="preview-box">
+                <h4>Summary</h4>
+                <div class="preview-row"><span>Estimated Use</span><b>109 bar</b></div>
+                <div class="preview-row"><span>Reserve</span><b>50 bar</b></div>
+                <div class="preview-row"><span>Safety Margin</span><b>11 bar</b></div>
+                <div class="preview-row"><span>Total Required</span><b style="color:var(--cyan)">170 bar</b></div>
+              </div>
+            </div>
+            <div class="preview-note">ⓘ Values are estimates. Always dive within your training and experience.</div>
+          </aside>
+        </section>
+
+        <section id="features" class="section-heading">
+          <h2>Built for quick dive planning</h2>
+          <p>Start with the essentials: plan a recreational no-decompression dive, calculate consumption, estimate required gas, and check oxygen exposure limits.</p>
+        </section>
+
+        <section class="tool-card-grid">
+          <article class="home-card">
+            <div class="home-card-head"><div class="icon-bubble">⌁</div><div><h3>Dive Planner</h3><p>Plan a single recreational no-decompression dive with optional gas-consumption checks.</p></div></div>
+            <ul class="check-list">
+              <li>Check planned depth and bottom time against table-based limits</li>
+              <li>See remaining no-decompression time</li>
+              <li>Toggle gas planning on or off</li>
+              <li>Get a clean recreational planning summary</li>
+            </ul>
+            <button class="card-action" onclick="openTool('dive')">Open Dive Planner</button>
+          </article>
+
+          <article class="home-card">
+            <div class="home-card-head"><div class="icon-bubble">▦</div><div><h3>SAC Calculator</h3><p>Calculate your surface-equivalent gas consumption based on real dive data.</p></div></div>
+            <ul class="check-list">
+              <li>Input average depth and dive time</li>
+              <li>Use cylinder size and pressure used</li>
+              <li>Get your SAC/RMV in L/min instantly</li>
+              <li>Track and improve gas efficiency</li>
+            </ul>
+            <button class="card-action secondary-card-action" onclick="openTool('sac')">Open SAC Calculator</button>
+          </article>
+
+          <article class="home-card">
+            <div class="home-card-head"><div class="icon-bubble">▯</div><div><h3>Gas Planner</h3><p>Estimate gas required for a planned recreational dive profile.</p></div></div>
+            <ul class="check-list">
+              <li>Estimate gas required for the dive</li>
+              <li>Set reserve pressure and safety margin</li>
+              <li>Choose common cylinder presets</li>
+              <li>See remaining gas at a glance</li>
+            </ul>
+            <button class="card-action secondary-card-action" onclick="openTool('gas')">Open Gas Planner</button>
+          </article>
+        </section>
+
+        <section class="mini-grid">
+          <article class="mini-card"><div class="icon-bubble">▥</div><h3>No-Decompression Checks</h3><p>Single-dive recreational table-style planning.</p></article>
+          <article class="mini-card"><div class="icon-bubble">◇</div><h3>Reserve Checks</h3><p>Keep reserve pressure visible while planning.</p></article>
+          <article class="mini-card"><div class="icon-bubble">▤</div><h3>Common Presets</h3><p>AL80, 10L, 12L and 15L starting points.</p></article>
+          <article class="mini-card"><div class="icon-bubble">⌁</div><h3>MOD Labels</h3><p>Generate clean MOD labels for gas mixes.</p></article>
+        </section>
+
+        <section class="section-heading">
+          <h2>Why NordTek?</h2>
+        </section>
+
+        <section class="why-grid">
+          <article class="why-card"><div class="icon-bubble">ϟ</div><div><h3>Fast Calculations</h3><p>Get answers quickly so you can focus on the dive plan, not the math.</p></div></article>
+          <article class="why-card"><div class="icon-bubble">✓</div><div><h3>Clear Safety Focus</h3><p>Conservative defaults, warnings and explanations keep safety visible.</p></div></article>
+          <article class="why-card"><div class="icon-bubble">◌</div><div><h3>Made for Divers</h3><p>Practical tools for everyday recreational planning and future technical features.</p></div></article>
+        </section>
+
+        <section class="section-heading">
+          <h2>Coming Soon</h2>
+          <p>NordTek will grow step by step without making the current tools harder to use.</p>
+        </section>
+
+        <section class="soon-grid">
+          <article class="soon-card"><div class="icon-bubble">↻</div><h3>Repetitive Dives</h3><p>Surface intervals, residual nitrogen and second-dive planning.</p></article>
+          <article class="soon-card"><div class="icon-bubble">%</div><h3>Nitrox Planner</h3><p>Recreational nitrox planning with MOD and table support.</p></article>
+          <article class="soon-card"><div class="icon-bubble">◎</div><h3>User Profiles</h3><p>Save SAC, cylinder presets and preferred reserve settings.</p></article>
+          <article class="soon-card"><div class="icon-bubble">⚙</div><h3>Tech Mode</h3><p>Advanced technical features after the recreational app is polished.</p></article>
+        </section>
+
+        <section id="home-safety" class="landing-disclaimer">
+          <div class="icon-bubble">i</div>
+          <p><strong>NordTek Dive Planner is a practical planning aid for scuba divers.</strong><br>
+          It is not a substitute for proper training, experience, agency standards, gas analysis, dive computers or sound judgment. You are responsible for your own dive decisions.</p>
+        </section>
+      </section>
+
+      <section id="about-page" class="page">
+        <div class="about-page-wrap">
+          <section class="about-hero">
+            <div class="eyebrow">About NordTek</div>
+            <h1>Recreational dive planning, kept simple<span class="red-dot">.</span></h1>
+            <p>
+              NordTek Dive Planner is built as a practical planning aid for recreational scuba divers.
+              The goal is to keep the app clean, fast and understandable before adding advanced systems like accounts, saved plans and future technical diving modes.
+            </p>
+            <div class="hero-secondary-row">
+              <button class="btn btn-primary" onclick="openTool('dive')">Open Planner</button>
+              <button class="btn btn-secondary" onclick="goHomeSection('features')">View Features ↓</button>
+            </div>
+          </section>
+
+          <section class="about-primary-card">
+            <h2>About NordTek Dive Planner</h2>
+            <p>
+              NordTek Dive Planner is a free recreational scuba diving planning tool designed to help divers estimate no-decompression limits, gas requirements, reserve volumes and dive logistics.
+            </p>
+            <p>
+              The planner provides quick calculations to support safer planning, while keeping the current app focused on recreational diving before advanced features like user accounts, saved plans and future technical modes are added.
+            </p>
+          </section>
+
+          <section class="about-card-grid">
+            <article class="about-card">
+              <h2>What it does</h2>
+              <p>NordTek helps divers check a single recreational no-decompression dive plan, estimate gas needs, calculate SAC/RMV, and check MOD limits.</p>
+            </article>
+
+            <article class="about-card">
+              <h2>Current focus</h2>
+              <ul>
+                <li>Recreational air dive planning</li>
+                <li>No-stop limit awareness</li>
+                <li>Gas and reserve checks</li>
+                <li>Simple mobile-friendly UI</li>
+              </ul>
+            </article>
+
+            <article class="about-card">
+              <h2>Not a substitute</h2>
+              <p>This planner does not replace formal training, agency standards, dive computers, tables, gas analysis, local procedures, or real judgment before a dive.</p>
+            </article>
+
+            <article class="about-card">
+              <h2>Future direction</h2>
+              <ul>
+                <li>User profiles and saved plans</li>
+                <li>Repetitive dive planning</li>
+                <li>Nitrox planning improvements</li>
+                <li>Separate technical mode later</li>
+              </ul>
+            </article>
+          </section>
+        </div>
+      </section>
+
+      <section id="tools-page" class="page">
+        <div class="tools-intro">
+          <h2>Planner</h2>
+          <p>Beta v1.5 introduces a recreational single-dive planner. Start with depth and bottom time, then toggle gas consumption if you want a full gas check.</p>
+        </div>
+        <div class="tools-shell">
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('dive')">Dive Planner</button>
+  <button class="tab" onclick="switchTab('sac')">SAC</button>
+  <button class="tab" onclick="switchTab('gas')">Gas</button>
+  <button class="tab" onclick="switchTab('mod')">MOD</button>
+</div>
+
+<div class="section active" id="dive-section">
+  <div class="info-box">
+    Plan a single recreational air dive. Use standard mode for a table-style no-decompression check, or enable gas consumption to include cylinder, reserve and SAC calculations.
+  </div>
+
+  <div class="planner-mode" aria-label="Dive planner mode">
+    <button class="mode-btn active" id="standard-plan-btn" onclick="setDiveGasMode(false)">Standard Planner</button>
+    <button class="mode-btn" id="gas-plan-btn" onclick="setDiveGasMode(true)">With Gas Consumption</button>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Planned Maximum Depth</div>
+    <div class="input-wrap">
+      <input type="number" id="dive-depth" value="18" min="1" oninput="calcDivePlanner()">
+      <span class="unit-badge">M</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Planned Bottom Time</div>
+    <div class="input-wrap">
+      <input type="number" id="dive-time" value="35" min="1" oninput="calcDivePlanner()">
+      <span class="unit-badge">MIN</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Safety Stop</div>
+    <div class="input-wrap">
+      <select id="dive-safety-stop" onchange="calcDivePlanner()">
+        <option value="yes" selected>3 min at 5 m recommended</option>
+        <option value="no">Do not include in gas estimate</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="gas-options" id="dive-gas-options">
+    <div class="preset-row">
+      <button class="preset-btn" onclick="presetDiveGas(11.1,207)">AL80</button>
+      <button class="preset-btn" onclick="presetDiveGas(10,300)">10L</button>
+      <button class="preset-btn" onclick="presetDiveGas(12,200)">12L</button>
+      <button class="preset-btn" onclick="presetDiveGas(15,200)">15L</button>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Cylinder Volume</div>
+      <div class="input-wrap">
+        <input type="number" id="dive-vol" value="12" min="1" oninput="calcDivePlanner()">
+        <span class="unit-badge">L</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Starting Pressure</div>
+      <div class="input-wrap">
+        <input type="number" id="dive-fill" value="200" min="1" oninput="calcDivePlanner()">
+        <span class="unit-badge">BAR</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Minimum Reserve Pressure</div>
+      <div class="input-wrap">
+        <input type="number" id="dive-reserve" value="50" min="0" oninput="calcDivePlanner()">
+        <span class="unit-badge">BAR</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">SAC / RMV Rate <span class="tip" data-tip="If you do not know your SAC yet, calculate it in the SAC tab or use a conservative estimate until you have real data.">?</span><span class="label-extra" onclick="openTool('sac')">Calculate yours ›</span></div>
+      <div class="input-wrap">
+        <input type="number" id="dive-sac" value="20" min="1" oninput="calcDivePlanner()">
+        <span class="unit-badge">L/MIN</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card visible" id="dive-result">
+    <div class="result-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      <div>
+        <div class="result-title" id="dive-title">—</div>
+        <div class="result-sub" id="dive-sub">—</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="stat-box">
+        <div class="stat-label">Table Depth Used</div>
+        <div class="stat-value" id="dive-table-depth">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">No-Stop Limit</div>
+        <div class="stat-value" id="dive-ndl">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">NDL Remaining</div>
+        <div class="stat-value" id="dive-remaining">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Safety Stop</div>
+        <div class="stat-value" id="dive-stop">—</div>
+      </div>
+    </div>
+
+    <div class="result-grid" id="dive-gas-result-grid" style="display:none;">
+      <div class="stat-box">
+        <div class="stat-label">Gas Required</div>
+        <div class="stat-value" id="dive-gas-req">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Estimated End Pressure</div>
+        <div class="stat-value" id="dive-end-pressure">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Usable Gas</div>
+        <div class="stat-value green" id="dive-usable-gas">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Gas Margin</div>
+        <div class="stat-value" id="dive-gas-margin">—</div>
+      </div>
+    </div>
+
+    <div class="planner-summary" id="dive-summary">—</div>
+  </div>
+
+  <button class="reset-btn" onclick="resetDivePlanner()">↻ Reset Dive Planner</button>
+
+  <div class="planner-source">
+    Beta v1.5 uses a simplified first-dive air no-stop limit lookup based on public NOAA table depths. Repetitive dives and nitrox table planning are planned for later versions.
+  </div>
+</div>
+
+   <div class="section" id="sac-section">
+  <div class="preset-row">
+    <button class="preset-btn" onclick="presetSAC(11.1,207)">AL80</button>
+    <button class="preset-btn" onclick="presetSAC(10,300)">10L</button>
+    <button class="preset-btn" onclick="presetSAC(12,200)">12L</button>
+    <button class="preset-btn" onclick="presetSAC(15,200)">15L</button>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Cylinder Volume</div>
+    <div class="input-wrap">
+      <input type="number" id="sac-tank" value="0" min="1" oninput="calcSAC()">
+      <span class="unit-badge tank-unit">L</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Starting Pressure</div>
+    <div class="input-wrap">
+      <input type="number" id="sac-start" value="0" min="0" oninput="calcSAC()">
+      <span class="unit-badge pressure-unit">BAR</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Ending Pressure</div>
+    <div class="input-wrap">
+      <input type="number" id="sac-end" value="0" min="0" oninput="calcSAC()">
+      <span class="unit-badge pressure-unit">BAR</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Dive Time</div>
+    <div class="input-wrap">
+      <input type="number" id="sac-time" value="0" min="1" oninput="calcSAC()">
+      <span class="unit-badge">MIN</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">
+      Average Depth
+      <span class="tip" data-tip="Use your average depth, not only the maximum depth. SAC is normalized to surface pressure.">?</span>
+    </div>
+    <div class="input-wrap">
+      <input type="number" id="sac-depth" value="0" min="0" oninput="calcSAC()">
+      <span class="unit-badge depth-unit">M</span>
+    </div>
+  </div>
+
+<details class="sac-help">
+  <summary>Don't know your average depth?</summary>
+
+  <div class="sac-help-content">
+    <p><strong>Use a SAC Test Dive:</strong></p>
+
+    <ol>
+      <li>Descend to a constant depth (10–15m recommended).</li>
+      <li>Swim normally for 10–15 minutes.</li>
+      <li>Record your start pressure, end pressure, dive time and depth.</li>
+      <li>Enter that depth as your Average Depth.</li>
+    </ol>
+
+    <p>
+      Because the depth remains constant, that depth can be used as your average depth,
+      producing a more accurate gas consumption rate.
+    </p>
+  </div>
+</details>
+  <div class="result-card" id="sac-result">
+    <div class="sac-result">
+      <div class="sac-label">Your Gas Consumption Rate</div>
+      <div><span class="sac-value" id="sac-display">—</span><span class="sac-unit"
+          id="sac-unit-display">L/min</span></div>
+      <div><span class="sac-badge" id="sac-badge">—</span></div>
+      <div class="sac-desc">Surface Air Consumption — the amount of gas you'd use per minute at the surface. SAC = (Pressure Used × Cylinder Volume) ÷ (Time × ATA)</div>
+      <div class="scale" id="sac-scale"></div>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetSAC()">↻ Reset</button>
+</div>
+
+    <div class="section" id="gas-section">
+      <div class="info-box">Plan your recreational dive gas needs. Enter your cylinder setup and dive profile — NordTek
+        calculates gas required, end pressure, reserve and safety margin.</div>
+      <div class="preset-row"><button class="preset-btn" onclick="presetGas(11.1,207)">AL80</button><button
+          class="preset-btn" onclick="presetGas(10,300)">10L</button><button class="preset-btn"
+          onclick="presetGas(12,200)">12L</button><button class="preset-btn"
+          onclick="presetGas(15,200)">15L</button></div>
+      <div class="field">
+        <div class="field-label">Cylinder Volume</div>
+        <div class="input-wrap"><input type="number" id="gas-vol" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge tank-unit">L</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Cylinder Fill Pressure</div>
+        <div class="input-wrap"><input type="number" id="gas-fill" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Planned Maximum Depth</div>
+        <div class="input-wrap"><input type="number" id="gas-depth" value="0" min="0" oninput="calcGas()"><span
+            class="unit-badge depth-unit">M</span></div>
+      </div>
+
+
+
+<div class="info-box">
+  Note: Gas consumption increases with depth due to increased ambient pressure. For safety, gas planning should be based on your planned maximum depth rather than your average depth. This provides a more conservative estimate and helps maintain adequate reserves for ascent, safety stops and unexpected delays.
+</div>
+      <div class="field">
+        <div class="field-label">Planned Dive Time</div>
+        <div class="input-wrap"><input type="number" id="gas-time" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge">MIN</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Minimum Reserve Pressure (50 bar recommended)</div>
+        <div class="input-wrap"><input type="number" id="gas-reserve" value="50" min="0" oninput="calcGas()"><span
+            class="unit-badge pressure-unit">BAR</span></div>
+      </div>
+      <div id="reserve-warning" class="warning-box" style="display:none;">
+  ⚠ Reserve pressure below 50 bar. Ensure your reserve is appropriate for the planned dive and local procedures.
+</div>
+      <div class="field">
+        <div class="field-label">Your Gas Consumption Rate <span class="tip"
+            data-tip="If you do not know your SAC yet, use 20 L/min as a conservative recreational estimate until you have real dive data.">?</span><span
+            class="label-extra" onclick="switchTab('sac')">Calculate yours ›</span></div>
+        <div class="input-wrap"><input type="number" id="gas-sac" value="0" min="1" oninput="calcGas()"><span
+            class="unit-badge sac-rate-unit">L/MIN</span></div>
+      </div>
+      <details class="sac-help">
+        <summary>SAC vs RMV — What's the difference?</summary>
+        <div class="sac-help-content">
+          <p>SAC and RMV are often used interchangeably. NordTek calculates surface-equivalent gas consumption in L/min, which is technically RMV-style, but “SAC Calculator” is the familiar recreational diving term.</p>
+        </div>
+      </details>
+      <div class="result-card" id="gas-result">
+        <div class="result-header"><svg id="gas-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <div>
+            <div class="result-title" id="gas-title">—</div>
+            <div class="result-sub" id="gas-sub">—</div>
+          </div>
+        </div>
+        <div class="result-grid">
+          <div class="stat-box">
+            <div class="stat-label">Gas Required</div>
+            <div class="stat-value" id="gas-req-val">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Usable Gas</div>
+            <div class="stat-value green" id="gas-avail-val">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">End Pressure</div>
+            <div class="stat-value" id="gas-end-pressure">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Safety Margin</div>
+            <div class="stat-value" id="gas-margin">—</div>
+          </div>
+        </div>
+        <div class="result-grid full">
+          <div class="stat-box">
+            <div class="stat-label">Reserve Remaining</div>
+            <div class="stat-value green" id="gas-reserve-val">—</div>
+          </div>
+        </div>
+      </div>
+     <button class="reset-btn" onclick="resetGas()">↻ Reset</button>
+
+<details class="sac-help">
+  <summary>How is Gas Required calculated?</summary>
+
+  <div class="sac-help-content">
+    <p>Gas Required = SAC × ATA × Time</p>
+
+    <p>
+       Gas consumption increases with depth because ambient pressure increases. ATA accounts for this effect when calculating gas requirements.
+    </p>
+  </div>
+</details>
+</div>
+
+    <div class="section" id="mod-section">
+  <div class="info-box">
+    Calculate Maximum Operating Depth based on gas mix and PPO₂ limit.
+  </div>
+
+
+  <div class="field">
+    <div class="field-label">Gas Type</div>
+    <div class="input-wrap">
+      <select id="mod-gas-type" onchange="setMODGasType(); calcMOD();">
+        <option value="air">Air</option>
+        <option value="nitrox">Nitrox</option>
+        <option value="trimix">Trimix</option>
+      </select>
+    </div>
+  </div>
+
+
+<div class="field">
+  <div class="field-label">O₂ Percentage</div>
+  <div class="input-wrap">
+    <input type="number" id="mod-o2" value="21" min="1" max="100" oninput="calcMOD()">
+    <span class="unit-badge">%</span>
+  </div>
+</div>
+
+<div class="field" id="helium-field" style="display:none;">
+  <div class="field-label">He Percentage</div>
+  <div class="input-wrap">
+    <input type="number" id="mod-he" value="45" min="0" max="100" oninput="calcMOD()">
+    <span class="unit-badge">%</span>
+  </div>
+</div>
+
+  <div class="field">
+    <div class="field-label">PPO₂ Limit</div>
+    <div class="input-wrap">
+     <select id="mod-ppo2" onchange="calcMOD()">
+  <option value="1.2">1.2</option>
+  <option value="1.3">1.3</option>
+  <option value="1.4" selected>1.4</option>
+  <option value="1.5">1.5</option>
+  <option value="1.6">1.6</option>
+</select>
+    </div>
+  </div>
+
+<details class="sac-help">
+  <summary>Why does NordTek use PPO₂ 1.4 as standard?</summary>
+
+  <div class="sac-help-content">
+    <p>
+      PPO₂ means partial pressure of oxygen. A higher PPO₂ increases oxygen exposure and oxygen toxicity risk.
+    </p>
+     <p>
+     Many training agencies use a PPO₂ of 1.4 as a working limit because it provides a balance between operational depth and oxygen exposure risk while still allowing practical dive planning.
+    </p>
+    <p>
+      NordTek uses 1.4 as the standard working limit because it is commonly used by many recreational and technical diving agencies for the active part of a dive.
+    </p>
+
+    <p>
+      Some divers use 1.2 or 1.3 for a more conservative plan, especially for deeper dives, cold water, stress, workload or longer exposure.
+    </p>
+
+    <p>
+      A PPO₂ of 1.6 is often treated as a contingency or decompression limit, not a normal working limit.
+    </p>
+
+    <p>
+      Always follow your training, agency standards, gas analysis procedures and dive computer settings.
+    </p>
+  </div>
+</details>
+
+  <div class="result-card" id="mod-result">
+    <div class="sac-result">
+      <div class="sac-label">Maximum Operating Depth</div>
+      <div>
+        <span class="sac-value" id="mod-display">—</span>
+        <span class="sac-unit">m</span>
+      </div>
+      <div class="sac-desc" id="mod-desc">
+        —
+      </div>
+    </div>
+  </div>
+
+
+<button class="action-btn" onclick="generateMODLabel()">
+  Generate MOD Label
+</button>
+
+<div class="result-card" id="mod-label-card">
+  <div class="sac-result">
+    <div class="sac-label">MOD Label</div>
+    <div class="sac-value" id="mod-label-mix">—</div>
+    <div class="stat-box" style="margin-top:14px;">
+      <div class="stat-label">Maximum Operating Depth</div>
+      <div class="stat-value" id="mod-label-depth">—</div>
+    </div>
+    <div class="stat-box" style="margin-top:10px;">
+      <div class="stat-label">PPO₂ Limit</div>
+      <div class="stat-value" id="mod-label-ppo2">—</div>
+    </div>
+
+<div class="stat-box" style="margin-top:10px;">
+  <div class="stat-label">Analyzed O₂</div>
+  <div class="stat-value" id="mod-label-o2">—</div>
+</div>
+
+<div class="stat-box" style="margin-top:10px; display:none;" id="mod-label-he-box">
+  <div class="stat-label">Helium</div>
+  <div class="stat-value" id="mod-label-he">—</div>
+</div>
+
+<div class="stat-box" style="margin-top:10px; display:none;" id="mod-label-n2-box">
+  <div class="stat-label">Nitrogen</div>
+  <div class="stat-value" id="mod-label-n2">—</div>
+</div>
+    <div class="safety-note">
+      Date: __________ &nbsp; Initials: __________
+    </div>
+  </div>
+</div>
+
+  <button class="reset-btn" onclick="resetMOD()">↻ Reset</button>
+
+  <div class="safety-note">
+    MOD calculations are for planning support only. Always follow your training, agency limits, gas analysis procedures and dive computer settings.
+  </div>
+</div>  
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div><span class="footer-title">NordTek Dive Planner</span></div>
+    <div>Plan smarter. Dive safer.</div>
+    <div>Beta v1.5 • by Dawood</div>
+  </footer>
+
+  <div class="disclaimer">
+    Disclaimer: NordTek Dive Planner is a planning aid only. Always verify dive plans, follow your training, and use appropriate dive computers, tables, and safety procedures. You are responsible for your own dive decisions.
+  </div>
+
+  <script>
+
+  const $ = id => document.getElementById(id);
+
+let currentToolTab = 'dive';
+
+function switchTab(tab, updateRoute = true) {
+  currentToolTab = tab;
+
+  document.querySelectorAll('.tab').forEach((t, i) =>
+    t.classList.toggle(
+      'active',
+      (i === 0 && tab === 'dive') ||
+      (i === 1 && tab === 'sac') ||
+      (i === 2 && tab === 'gas') ||
+      (i === 3 && tab === 'mod')
+    )
+  );
+
+  $('dive-section').classList.toggle('active', tab === 'dive');
+  $('sac-section').classList.toggle('active', tab === 'sac');
+  $('gas-section').classList.toggle('active', tab === 'gas');
+  $('mod-section').classList.toggle('active', tab === 'mod');
+
+  if (updateRoute && document.getElementById('tools-page').classList.contains('active-page-view')) {
+    pushRoute(tab === 'dive' ? 'planner' : 'planner/' + tab);
+  }
+
+  calcAll();
+}
+
+
+let diveGasMode = false;
+
+const noStopTableAir = [
+  { metres: 12.2, feet: 40, ndl: 163 },
+  { metres: 13.7, feet: 45, ndl: 125 },
+  { metres: 15.2, feet: 50, ndl: 92 },
+  { metres: 16.8, feet: 55, ndl: 74 },
+  { metres: 18.3, feet: 60, ndl: 60 },
+  { metres: 21.3, feet: 70, ndl: 48 },
+  { metres: 24.4, feet: 80, ndl: 39 },
+  { metres: 27.4, feet: 90, ndl: 30 },
+  { metres: 30.5, feet: 100, ndl: 25 },
+  { metres: 33.5, feet: 110, ndl: 20 },
+  { metres: 36.6, feet: 120, ndl: 15 },
+  { metres: 39.6, feet: 130, ndl: 10 }
+];
+
+function getNoStopLimit(depth) {
+  return noStopTableAir.find(row => depth <= row.metres) || null;
+}
+
+function setDiveGasMode(enabled) {
+  diveGasMode = enabled;
+
+  $('standard-plan-btn').classList.toggle('active', !enabled);
+  $('gas-plan-btn').classList.toggle('active', enabled);
+  $('dive-gas-options').classList.toggle('visible', enabled);
+  $('dive-gas-result-grid').style.display = enabled ? 'grid' : 'none';
+
+  calcDivePlanner();
+}
+
+function calcDivePlanner() {
+  const depth = +$('dive-depth')?.value || 0;
+  const time = +$('dive-time')?.value || 0;
+  const tableRow = getNoStopLimit(depth);
+  const card = $('dive-result');
+
+  if (!card) return;
+
+  if (!depth || !time) {
+    card.className = 'result-card visible';
+    $('dive-title').textContent = 'Enter a planned depth and bottom time';
+    $('dive-sub').textContent = 'NordTek will check the no-decompression planning limit.';
+    $('dive-table-depth').textContent = '—';
+    $('dive-ndl').textContent = '—';
+    $('dive-remaining').textContent = '—';
+    $('dive-stop').textContent = '—';
+    $('dive-summary').textContent = 'This planner is for single recreational air dives only in Beta v1.5.';
+    return;
+  }
+
+  if (!tableRow) {
+    card.className = 'result-card visible bad';
+    $('dive-title').textContent = 'Outside recreational table range';
+    $('dive-sub').textContent = 'This beta planner supports air dives up to 39.6 m / 130 fsw.';
+    $('dive-table-depth').textContent = '> 39.6 m';
+    $('dive-ndl').textContent = '—';
+    $('dive-remaining').textContent = '—';
+    $('dive-stop').textContent = $('dive-safety-stop').value === 'yes' ? '3 min @ 5 m' : 'Not included';
+    $('dive-summary').textContent = 'Reduce the planned depth or use proper training, tables and dive computer procedures.';
+    return;
+  }
+
+  const remaining = tableRow.ndl - time;
+  const closeLimit = remaining >= 0 && remaining <= Math.max(5, tableRow.ndl * 0.15);
+
+  card.className = 'result-card visible ' + (remaining < 0 ? 'bad' : closeLimit ? 'warn' : 'ok');
+
+  $('dive-title').textContent =
+    remaining < 0 ? 'Planned time exceeds no-stop limit' :
+    closeLimit ? 'Within limit, but close' :
+    'Within selected no-decompression limit';
+
+  $('dive-sub').textContent =
+    'Depth is rounded up to the next table depth for a conservative planning check.';
+
+  $('dive-table-depth').innerHTML = tableRow.metres.toFixed(1) + ' <span class="unit">m</span>';
+  $('dive-ndl').innerHTML = tableRow.ndl + ' <span class="unit">min</span>';
+  $('dive-remaining').innerHTML = (remaining >= 0 ? remaining : Math.abs(remaining)) + ` <span class="unit">${remaining >= 0 ? 'min left' : 'min over'}</span>`;
+  $('dive-remaining').className = 'stat-value ' + (remaining < 0 ? 'red' : closeLimit ? 'orange' : 'green');
+  $('dive-stop').textContent = $('dive-safety-stop').value === 'yes' ? '3 min @ 5 m' : 'Not included';
+
+  let summary =
+    remaining < 0
+      ? 'This plan is outside the selected no-stop table limit. Shorten the bottom time, reduce depth, or use proper trained procedures.'
+      : closeLimit
+        ? 'This plan is inside the selected limit, but close to the no-stop boundary. Consider a shorter time or shallower depth.'
+        : 'This plan is inside the selected no-stop limit for a single recreational air dive.';
+
+  if (diveGasMode) {
+    const vol = +$('dive-vol').value || 0;
+    const fill = +$('dive-fill').value || 0;
+    const reserve = +$('dive-reserve').value || 0;
+    const sac = +$('dive-sac').value || 0;
+    const includeStop = $('dive-safety-stop').value === 'yes';
+
+    if (vol && fill && sac) {
+      const bottomGas = sac * ata(depth) * time;
+      const stopGas = includeStop ? sac * ata(5) * 3 : 0;
+      const req = bottomGas + stopGas;
+      const total = gasFromPressure(vol, fill);
+      const reserveGas = gasFromPressure(vol, reserve);
+      const usable = total - reserveGas;
+      const remainGas = usable - req;
+      const endPressure = fill - pressureFromGas(req, vol);
+      const margin = usable > 0 ? (remainGas / usable) * 100 : 0;
+      const gasOk = req <= usable;
+
+      $('dive-gas-req').innerHTML = Math.round(req) + ' <span class="unit">L</span>';
+      $('dive-end-pressure').innerHTML = Math.round(endPressure) + ' <span class="unit">bar</span>';
+      $('dive-usable-gas').innerHTML = Math.round(usable) + ' <span class="unit">L</span>';
+      $('dive-gas-margin').innerHTML = (margin >= 0 ? '+' : '') + Math.round(margin) + '%';
+      $('dive-gas-margin').className = 'stat-value ' + (gasOk ? (margin < 20 ? 'orange' : 'green') : 'red');
+
+      if (!gasOk) {
+        card.className = 'result-card visible bad';
+        summary += ' Gas check: insufficient usable gas after reserve for this plan.';
+      } else if (margin < 20) {
+        if (remaining >= 0) card.className = 'result-card visible warn';
+        summary += ' Gas check: enough usable gas, but the margin is narrow.';
+      } else {
+        summary += ' Gas check: usable gas appears sufficient while maintaining the selected reserve.';
+      }
+    } else {
+      summary += ' Enter cylinder, pressure and SAC values to complete the gas check.';
+    }
+  }
+
+  $('dive-summary').textContent = summary;
+}
+
+function presetDiveGas(vol, fill) {
+  $('dive-vol').value = vol;
+  $('dive-fill').value = fill;
+  calcDivePlanner();
+}
+
+function resetDivePlanner() {
+  $('dive-depth').value = 18;
+  $('dive-time').value = 35;
+  $('dive-safety-stop').value = 'yes';
+  $('dive-vol').value = 12;
+  $('dive-fill').value = 200;
+  $('dive-reserve').value = 50;
+  $('dive-sac').value = 20;
+  setDiveGasMode(false);
+  calcDivePlanner();
+}
+
+function routeToHash(route) {
+  return route === 'home' ? '#home' : '#' + route;
+}
+
+function normalizeRoute(route) {
+  route = (route || '').replace(/^#/, '').trim();
+  if (!route) return 'home';
+  if (route === 'tools') return 'planner';
+  if (route === 'planner/dive') return 'planner';
+  return route;
+}
+
+function getCurrentRoute() {
+  return normalizeRoute(window.location.hash || 'home');
+}
+
+function pushRoute(route, replace = false) {
+  route = normalizeRoute(route);
+  const hash = routeToHash(route);
+  if (window.location.hash === hash) return;
+
+  if (replace) {
+    history.replaceState({ route }, '', hash);
+  } else {
+    history.pushState({ route }, '', hash);
+  }
+}
+
+function setActiveNav(page) {
+  document.querySelectorAll('.nav-actions button').forEach(button => {
+    button.classList.remove('active-page');
+  });
+
+  const homeButton = document.querySelector('.nav-actions button[onclick="goHome()"]');
+  const aboutButton = document.querySelector('.nav-actions button[onclick="showPage(\'about\')"]');
+  const plannerButton = document.querySelector('.nav-actions .open-planner');
+
+  if (page === 'home' && homeButton) homeButton.classList.add('active-page');
+  if (page === 'about' && aboutButton) aboutButton.classList.add('active-page');
+  if (page === 'tools' && plannerButton) plannerButton.classList.add('active-page');
+}
+
+function renderPage(page) {
+  const homePage = document.getElementById('home-page');
+  const toolsPage = document.getElementById('tools-page');
+  const aboutPage = document.getElementById('about-page');
+
+  homePage.classList.toggle('active-page-view', page === 'home');
+  toolsPage.classList.toggle('active-page-view', page === 'tools');
+  aboutPage.classList.toggle('active-page-view', page === 'about');
+  setActiveNav(page);
+}
+
+function applyRoute(route, options = {}) {
+  const { push = false, replace = false, scroll = true } = options;
+  route = normalizeRoute(route);
+  closeMoreMenu();
+
+  if (push) pushRoute(route, replace);
+
+  if (route === 'about') {
+    renderPage('about');
+    if (scroll) setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+    return;
+  }
+
+  if (route === 'features') {
+    renderPage('home');
+    if (scroll) {
+      setTimeout(() => {
+        const section = document.getElementById('features');
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+    }
+    return;
+  }
+
+  if (route.startsWith('planner')) {
+    const tab = route.split('/')[1] || 'dive';
+    renderPage('tools');
+    switchTab(tab, false);
+    if (scroll) setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+    return;
+  }
+
+  renderPage('home');
+  if (scroll) setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+}
+
+function goHome() {
+  applyRoute('home', { push: true, scroll: true });
+}
+
+function goHomeSection(sectionId) {
+  applyRoute(sectionId, { push: true, scroll: true });
+}
+
+function toggleMoreMenu(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('more-menu');
+  const button = document.querySelector('.more-btn');
+  const isOpen = menu.classList.toggle('visible');
+  if (button) button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeMoreMenu() {
+  const menu = document.getElementById('more-menu');
+  const button = document.querySelector('.more-btn');
+  if (menu) menu.classList.remove('visible');
+  if (button) button.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', closeMoreMenu);
+
+function openTool(tab = 'dive') {
+  const route = tab === 'dive' ? 'planner' : 'planner/' + tab;
+  applyRoute(route, { push: true, scroll: true });
+}
+
+
+function setMODGasType() {
+  const gasType = $('mod-gas-type').value;
+
+  $('helium-field').style.display =
+    gasType === 'trimix' ? 'block' : 'none';
+
+  if (gasType === 'air') {
+    $('mod-o2').value = 21;
+  }
+
+  if (gasType === 'nitrox') {
+    $('mod-o2').value = 32;
+  }
+
+  if (gasType === 'trimix') {
+    $('mod-o2').value = 18;
+    $('mod-he').value = 45;
+  }
+
+  calcMOD();
+}
+
+function calcMOD() {
+  const o2 = +$('mod-o2').value || 0;
+  const ppo2 = +$('mod-ppo2').value || 0;
+  const card = $('mod-result');
+
+  if (!o2 || !ppo2 || o2 <= 0 || o2 > 100) {
+    card.classList.remove('visible');
+    return;
+  }
+
+  const fractionO2 = o2 / 100;
+  const mod = ((ppo2 / fractionO2) - 1) * 10;
+
+  $('mod-display').textContent = mod.toFixed(1);
+
+let mixName = 'Air';
+let n2 = null;
+
+if (o2 !== 21) {
+    mixName = 'EAN' + o2;
+}
+
+if ($('mod-gas-type').value === 'trimix') {
+    const he = +$('mod-he').value || 0;
+    n2 = 100 - o2 - he;
+
+    mixName = 'TX' + o2 + '/' + he;
+}
+
+  $('mod-desc').textContent =
+    mixName + ' at PPO₂ ' + ppo2 + ' gives a MOD of ' + mod.toFixed(1) + ' metres.';
+
+  card.classList.add('visible');
+}
+
+function resetMOD() {
+  $('mod-gas-type').value = 'air';
+  $('mod-o2').value = 21;
+  $('mod-ppo2').value = 1.4;
+  $('mod-he').value = 45;
+  $('helium-field').style.display = 'none';
+  $('mod-label-card').classList.remove('visible');
+  calcMOD();
+}
+
+  function ata(depth) {
+    return depth / 10 + 1;
+  }
+
+  function gasFromPressure(vol, pressure) {
+    return vol * pressure;
+  }
+
+  function pressureFromGas(gas, vol) {
+    return gas / vol;
+  }
+
+  function volumeUnit() {
+    return 'L';
+  }
+
+  function pressureUnit() {
+    return 'bar';
+  }
+
+function generateMODLabel() {
+  const o2 = +$('mod-o2').value || 0;
+  const ppo2 = +$('mod-ppo2').value || 0;
+
+  if (!o2 || !ppo2) return;
+
+  const fractionO2 = o2 / 100;
+  const mod = ((ppo2 / fractionO2) - 1) * 10;
+
+  let mixName = 'Air';
+  let n2 = null;
+
+  if (o2 !== 21) {
+    mixName = 'EAN' + o2;
+  }
+
+  if ($('mod-gas-type').value === 'trimix') {
+    const he = +$('mod-he').value || 0;
+    n2 = 100 - o2 - he;
+
+    mixName = 'TX' + o2 + '/' + he;
+
+    $('mod-label-he').textContent = he + '%';
+    $('mod-label-he-box').style.display = 'block';
+  } else {
+    $('mod-label-he-box').style.display = 'none';
+  }
+
+  $('mod-label-mix').textContent = mixName;
+  $('mod-label-depth').textContent = mod.toFixed(1) + ' m';
+  $('mod-label-ppo2').textContent = ppo2;
+  $('mod-label-o2').textContent = o2 + '%';
+
+  if (n2 !== null) {
+    $('mod-label-n2').textContent = n2 + '%';
+    $('mod-label-n2-box').style.display = 'block';
+  } else {
+    $('mod-label-n2-box').style.display = 'none';
+  }
+
+  $('mod-label-card').classList.add('visible');
+}
+
+
+  function calcSAC() {
+    const start = +$('sac-start').value || 0,
+          end = +$('sac-end').value || 0,
+          tank = +$('sac-tank').value || 0,
+          time = +$('sac-time').value || 0,
+          depth = +$('sac-depth').value || 0,
+          card = $('sac-result');
+
+    if (!start || !tank || !time || !depth || start <= end) {
+      card.classList.remove('visible');
+      return;
+    }
+
+    const sac = gasFromPressure(tank, start - end) / time / ata(depth);
+
+    $('sac-display').textContent = sac.toFixed(2);
+
+    let label = 'High',
+        cls = 'high',
+        icon = '↑';
+
+    const limits = [10, 15, 20, 25];
+
+    if (sac < limits[0]) {
+      label = 'Excellent';
+      cls = 'great';
+      icon = '↓';
+    } else if (sac < limits[1]) {
+      label = 'Very Good';
+      cls = 'good';
+      icon = '✓';
+    } else if (sac < limits[2]) {
+      label = 'Good';
+      cls = 'good';
+      icon = '⌁';
+    } else if (sac < limits[3]) {
+      label = 'Average';
+      cls = '';
+      icon = '~';
+    }
+
+    $('sac-badge').className = 'sac-badge ' + cls;
+    $('sac-badge').textContent = icon + ' ' + label;
+
+    renderScale(sac, limits);
+    card.classList.add('visible');
+  }
+
+  function renderScale(sac, limits) {
+    const labels = ['Excellent', 'Very Good', 'Good', 'Average', 'High'];
+    const ranges = ['<10', '10-15', '15-20', '20-25', '25+'];
+
+    let idx = sac < limits[0] ? 0 :
+              sac < limits[1] ? 1 :
+              sac < limits[2] ? 2 :
+              sac < limits[3] ? 3 : 4;
+
+    $('sac-scale').innerHTML = labels.map((l, i) =>
+      `<div class="scale-item ${i === idx ? 'active' : ''}">
+        <strong>${l}</strong><span>${ranges[i]}</span>
+      </div>`
+    ).join('');
+  }
+
+  function calcGas() {
+    const vol = +$('gas-vol').value || 0,
+          fill = +$('gas-fill').value || 0,
+          depth = +$('gas-depth').value || 0,
+          time = +$('gas-time').value || 0,
+          reserve = +$('gas-reserve').value || 0,
+          sac = +$('gas-sac').value || 0,
+          card = $('gas-result');
+
+    if (reserve > 0 && reserve < 50) {
+      $('reserve-warning').style.display = 'block';
+    } else {
+      $('reserve-warning').style.display = 'none';
+    }
+
+    if (!vol || !fill || !depth || !time || !sac) {
+      card.classList.remove('visible');
+      return;
+    }
+
+    const req = sac * ata(depth) * time,
+          total = gasFromPressure(vol, fill),
+          reserveGas = gasFromPressure(vol, reserve),
+          usable = total - reserveGas,
+          remain = usable - req,
+          endPressure = fill - pressureFromGas(req, vol),
+          margin = usable > 0 ? (remain / usable) * 100 : 0,
+          sufficient = req <= usable,
+          tight = margin >= 0 && margin < 20;
+
+    const vu = volumeUnit(),
+          pu = pressureUnit();
+
+    $('gas-req-val').innerHTML = Math.round(req) + ` <span class="unit">${vu}</span>`;
+    $('gas-avail-val').innerHTML = Math.round(usable) + ` <span class="unit">${vu}</span>`;
+    $('gas-end-pressure').innerHTML = Math.round(endPressure) + ` <span class="unit">${pu}</span>`;
+    $('gas-margin').innerHTML = (margin >= 0 ? '+' : '') + Math.round(margin) + '%';
+    $('gas-reserve-val').innerHTML = Math.round(remain) + ` <span class="unit">${vu}</span>`;
+
+    $('gas-reserve-val').className = 'stat-value ' + (remain >= 0 ? 'green' : 'red');
+    $('gas-margin').className = 'stat-value ' + (sufficient ? (tight ? 'orange' : 'green') : 'red');
+
+    card.className = 'result-card visible ' + (sufficient ? (tight ? 'warn' : 'ok') : 'bad');
+
+    $('gas-title').textContent =
+      sufficient ? (tight ? 'Gas Supply Tight' : 'Planned Gas Supply Sufficient') : 'Insufficient Gas';
+
+    $('gas-sub').textContent =
+      sufficient
+        ? (tight ? 'Enough gas, but the safety margin is narrow.' : 'You have enough gas to complete this dive.')
+        : 'You do not have enough gas for this dive profile.';
+  }
+
+  function presetSAC(tank, fill) {
+    $('sac-tank').value = tank;
+    $('sac-start').value = fill;
+    calcSAC();
+  }
+
+  function presetGas(vol, fill) {
+    $('gas-vol').value = vol;
+    $('gas-fill').value = fill;
+    calcGas();
+  }
+
+  function resetSAC() {
+    $('sac-start').value = 0;
+    $('sac-end').value = 0;
+    $('sac-tank').value = 0;
+    $('sac-time').value = 0;
+    $('sac-depth').value = 0;
+    calcSAC();
+  }
+
+  function resetGas() {
+    $('gas-vol').value = 0;
+    $('gas-fill').value = 0;
+    $('gas-depth').value = 0;
+    $('gas-time').value = 0;
+    $('gas-reserve').value = 50;
+    $('gas-sac').value = 0;
+    calcGas();
+  }
+
+function calcAll() {
+  calcDivePlanner();
+  calcSAC();
+  calcGas();
+  calcMOD();
+}
+
+  calcAll();
+
+
+function showPage(page, updateRoute = true) {
+  if (page === 'tools') {
+    applyRoute(currentToolTab === 'dive' ? 'planner' : 'planner/' + currentToolTab, {
+      push: updateRoute,
+      scroll: true
+    });
+    return;
+  }
+
+  applyRoute(page, {
+    push: updateRoute,
+    scroll: true
+  });
+}
+
+window.addEventListener('popstate', () => {
+  applyRoute(getCurrentRoute(), { push: false, scroll: true });
+});
+
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+
+applyRoute(getCurrentRoute(), { push: false, scroll: false });
+  </script>
+</body>
+</html>
